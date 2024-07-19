@@ -1,11 +1,22 @@
 const express = require('express');
-const app = express();
-const port = 5000;
+const bodyParser = require('body-parser');
+const cors = require('cors');
+require('dotenv').config();
 
-app.get('/', (req, res) => {
-  res.send('Hello from the backend!');
-});
+const app = express();
+const port = process.env.PORT || 8080;
+const routes = require('./routes/routes');
+
+app.use(bodyParser.json());
+
+app.use(cors({
+  origin: process.env.ALLOWED_ORIGINS || "*", // Allow all origins or specify
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+}));
+
+app.use(routes);
 
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+  console.log(`Server running at http://localhost:${port}`);
 });
