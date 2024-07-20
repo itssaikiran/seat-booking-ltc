@@ -1,19 +1,21 @@
-import "./App.css";
-import Login from "./Login";
-import Signup from "./Signup";
-import Admin from "./Admin";
 import {
-  BrowserRouter as Router,
-  Routes,
   Route,
-  Navigate,
+  BrowserRouter as Router,
+  Routes
 } from "react-router-dom";
-import Hoe from "./Hoe";
-import Manager from "./Manager";
-import Header from "./Header";
+import Admin from "./Admin";
+import "./App.css";
 import { Employee } from "./Employee";
+import Header from "./Header";
+import Hoe from "./Hoe";
+import Login from "./Login";
+import Manager from "./Manager";
+import Signup from "./Signup";
 // import AuthProvider from "./AuthProvider";
 import ProtectedRoute from "./ProtectedRoute";
+import ConfigureSeatAllocation from './configureSeatAllocation';
+import SeatAllocation from './seatAllocation';
+import SeatAllocationAdmin from './seatAllocationAdmin';
 
 function App() {
   return (
@@ -28,6 +30,9 @@ function App() {
             <Route path="/hoe" element={<Hoe />} />
             <Route path="/manager" element={<Manager />} />
             <Route path="/employee" element={<Employee />} />
+            <Route path='/seatAllocation' element={<SeatAllocation/>}></Route>
+            <Route path='/seatAllocationAdmin' element={<SeatAllocationAdmin/>}></Route>
+            <Route path='/configureSeatAllocation' element={<ConfigureSeatAllocation/>}></Route>
           </Route>
         </Routes>
       </Router>

@@ -1,10 +1,10 @@
-import React, { useState, useContext } from "react";
-import { Container, Typography, Link } from "@mui/material";
-import Button from "@mui/material/Button";
-import TextField from "@mui/material/TextField";
-import Grid from "@mui/material/Grid";
+import { Container, Link, Typography } from "@mui/material";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Grid from "@mui/material/Grid";
+import TextField from "@mui/material/TextField";
 import axios from "axios";
+import React, { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "./AuthProvider";
 
@@ -64,7 +64,7 @@ export default function Login() {
       // Redirect based on role
       switch (role) {
         case "admin":
-          navigate("/admin");
+          navigate("/seatAllocationAdmin");
           break;
         case "manager":
           navigate("/manager");
