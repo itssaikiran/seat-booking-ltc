@@ -9,11 +9,7 @@ const routes = require('./routes/routes');
 
 app.use(bodyParser.json());
 
-app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS || "*", // Allow all origins or specify
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE"],
-}));
+app.use(cors());
 
 app.use(routes);
 
