@@ -134,6 +134,51 @@ const getSeatingCapacityAdminByFilter=async(values)=>{
     }
 }
 
+const getHOEFromTable = async (id) => {
+  const sql = `SELECT t1.id, t1.name, t1.manager, t1.role, t2.country, t2.state, t2.city, t2.floor, t2.total, t2.seats
+            FROM business_unit AS t1
+            INNER JOIN seat_allocation AS t2
+            ON t1.id = t2.bu_id
+            WHERE t1.id = $1`;
+  const values = [id];
+
+  try {
+    const { rows } = await pool.query(sql, values);
+    //console.log(rows);
+    return rows;
+  } catch (err) {
+    console.error('Error executing query', err);
+    throw err;
+  }
+};
+
+const getManagersByHOEIdFromTable = async (id) => {
+  const sql = 'SELECT * FROM manager_allocation WHERE hoe_id = $1 ORDER BY seats_array[1]';
+  const values = [id];
+
+  try {
+    const { rows } = await pool.query(sql, values);
+    //console.log(rows);
+    return rows;
+  } catch (err) {
+    console.error('Error executing query', err);
+    throw err;
+  }
+};
+
+const updateManagerData = async (id, seats) => {
+  const sql = 'UPDATE manager_allocation SET seats_array = $1 WHERE id = $2';
+  const values = [seats, id];
+
+  try {
+    const result = await pool.query(sql, values);
+    return result;
+  } catch (err) {
+    console.error('Error executing query', err);
+    throw err;
+  }
+};
+
 module.exports = {
   insertUser,
   findUserByEmailAndPassword,
@@ -144,6 +189,9 @@ module.exports = {
   deleteSeatingCapacityAdmin,
   updateSeatingCapacityAdmin,
   createSeatingCapacityAdmin,
-  getSeatingCapacityAdmin
+  getSeatingCapacityAdmin,
+  getHOEFromTable, 
+  getManagersByHOEIdFromTable, 
+  updateManagerData
 };
 
