@@ -1,17 +1,26 @@
-const { Pool } = require('pg');
-const dbConfig = require('../config/db.config'); // Adjust based on the actual path
+const { Pool } = require("pg");
+const getDbConfig = require("../config/db.config");
 
-const pool = new Pool(dbConfig);
+let pool;
 
-pool.on('connect', () => {
-  console.log('Connected to the database');
-});
+async function initializePool() {
+  const dbConfig = await getDbConfig();
+  pool = new Pool(dbConfig);
 
-pool.on('error', (err) => {
-  console.error('Error connecting to the database:', err);
-});
+  pool.on("connect", () => {
+    console.log("Connected to the database");
+  });
+
+  pool.on("error", (err) => {
+    console.error("Error connecting to the database:", err);
+  });
+}
 
 const query = async (text, params) => {
+  if (!pool) {
+    await initializePool();
+  }
+
   const client = await pool.connect();
   try {
     const res = await client.query(text, params);
@@ -21,4 +30,7 @@ const query = async (text, params) => {
   }
 };
 
-module.exports = pool;
+module.exports = {
+  query,
+  initializePool,
+};
