@@ -64,6 +64,12 @@ const ConfigureSeatAllocation = () => {
   const [capacityList, setCapacityList] = React.useState([]);
   const [configFlag, setConfigFlag] = React.useState("Add");
   const [currentId, setCurrentId] = React.useState(0);
+  const [errors,setErrors]= React.useState({
+    country:'',
+    state:'',
+    city:'',
+    floor:''
+  });
   const navigate = useNavigate();
 
   React.useEffect(() => {
@@ -81,15 +87,52 @@ const ConfigureSeatAllocation = () => {
         console.log(err);
       });
   };
-  const handleChange = (event) => { 
+  const handleChange = (event) => {
     setValues({ ...values, [event.target.name]: event.target.value });
+    setErrors({...errors,[event.target.name]:""})
     // }
   };
 
   const handleAllocation = () => {
     setAllocateSeatSecFlag(true);
   };
+  const validate = () => {
+    const newErrors = {};
+    
+    if(!values.country){
+      newErrors.country="country required"
+    }
+    if(!values.state){
+      newErrors.state="country required"
+     }
+    if(!values.city){
+      newErrors.city="country required"
+     }
+    if(!values.floor){
+      newErrors.floor="country required"
+     }
+    if(!values.capacity){
+      newErrors.capacity="country required"
+     }
+    return newErrors;
+  };
   const handleSubmitAllocation = async () => {
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+    } else {
+      // No errors, proceed with form submission (e.g., API call)
+      console.log('Form data submitted:');
+      setErrors({});
+      // Reset form or redirect user after successful submission
+    }
+    if(!values.country || !values.state || !values.city || !values.floor){ 
+     
+      return;
+
+    }
+    
+    
     console.log(values, "55");
     if (configFlag == "Edit") {
       editCapacity();
@@ -134,6 +177,7 @@ const ConfigureSeatAllocation = () => {
     let copyInitialState = JSON.parse(JSON.stringify(initialState));
     setValues(copyInitialState);
     setCurrentId(0);
+    setErrors({})
   };
   const handleBack = () => {
     setAllocateSeatSecFlag(false);
@@ -203,7 +247,10 @@ const ConfigureSeatAllocation = () => {
                   <MenuItem value={"uk"}>UK</MenuItem>
                   <MenuItem value={"us"}>US</MenuItem>
                 </Select>
+                {errors.country?<div className="fontFamily" style={{color:"red",paddingTop:"5px", fontSize:"14px"}}>Country is required</div>:""}
+
               </FormControl>
+
             </Box>
             <Box sx={{ minWidth: 120 }}>
               <FormControl sx={{ m: 2, minWidth: "90%" }} size="medium">
@@ -220,6 +267,7 @@ const ConfigureSeatAllocation = () => {
                   <MenuItem value={"telangana"}>Telangana</MenuItem>
                   <MenuItem value={"karnataka"}>Karnataka</MenuItem>
                 </Select>
+                {errors.state?<div className="fontFamily" style={{color:"red",paddingTop:"5px", fontSize:"12px"}}>State is required</div>:""}
               </FormControl>
             </Box>
             <Box sx={{ minWidth: 120 }}>
@@ -237,6 +285,8 @@ const ConfigureSeatAllocation = () => {
                   <MenuItem value={"hyderabad"}>Hyderabad</MenuItem>
                   <MenuItem value={"bangalore"}>Bangalore</MenuItem>
                 </Select>
+                {errors.city?<div className="fontFamily" style={{color:"red",paddingTop:"5px", fontSize:"12px"}}>City is required</div>:""}
+
               </FormControl>
             </Box>
             <Box sx={{ minWidth: 120 }}>
@@ -255,6 +305,8 @@ const ConfigureSeatAllocation = () => {
                   <MenuItem value={"6"}>6</MenuItem>
                   <MenuItem value={"10"}>10</MenuItem>
                 </Select>
+                {errors.floor?<div className="fontFamily" style={{color:"red",paddingTop:"5px", fontSize:"12px"}}>Floor is required</div>:""}
+
               </FormControl>
             </Box>
             <Box sx={{ minWidth: 120 }}>
@@ -268,6 +320,8 @@ const ConfigureSeatAllocation = () => {
                   value={values.capacity}
                   onChange={handleChange}
                 />
+                                {errors.capacity?<div className="fontFamily" style={{color:"red",paddingTop:"5px", fontSize:"12px"}}>Add capacity</div>:""}
+
                 {/* <Input id="outlined-basic" variant="outlined"   name='maxSeats' value={values.maxSeats} onChange={handleChange} type="number"/> */}
               </FormControl>
             </Box>

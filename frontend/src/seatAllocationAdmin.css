@@ -35,3 +35,7 @@
   pointer-events: none; /* Disable pointer events */ 
   cursor: not-allowed; /* Optional: Change cursor to indicate not-allowed */
 }
+.seatAllocationContainer  .MuiInputBase-formControl {
+  text-transform: capitalize !important;
+  font-family: sans-serif !important;
+}
