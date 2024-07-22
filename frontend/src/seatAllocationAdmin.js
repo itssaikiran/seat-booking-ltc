@@ -522,8 +522,13 @@ const SeatAllocationAdmin = () => {
     navigate("/configureSeatAllocation");
   };
   const getBuCount=(id)=>{
-    if(seats && seats.length>0){
+    if(seats && seats.length>0 && id){
       let records= seats.filter((seat,i)=>seat.bu==id && seat.selected) 
+      if(records.length>0){
+        return records.length
+      }
+    }else{
+      let records= seats.filter((seat,i)=>seat.bu=="") 
       if(records.length>0){
         return records.length
       }
@@ -731,6 +736,19 @@ const SeatAllocationAdmin = () => {
                     <div>{bu.name} (<b>{getBuCount(bu.id)}</b>)</div>
                   </div>
                 ))}
+                <div className="legendsSeating fontFamily">
+                    <div
+                      className="seat"
+                      style={{
+                        background: "#d1cdcd",
+                        height: "15px",
+                        width: "15px",
+                      }}
+                    >
+                      {" "}
+                    </div>
+                    <div>Unallocated (<b>{getBuCount("")}</b>)</div>
+                  </div>
             </Box>
           </Grid>
           {/* )} */}
