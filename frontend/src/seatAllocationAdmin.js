@@ -52,10 +52,15 @@ const SeatAllocationAdmin = () => {
   React.useEffect(() => {
     // getSeatingCapacityAdmin();
     getBu();
-    getCapacityData();
     getAllocationData();
-    getConfiguredDataByFilter(values.floor ? values.floor : "5");
   }, []);
+  React.useEffect(() => {
+    if (values.floor) {
+      getAllocationData();
+      getCapacityData();
+      getConfiguredDataByFilter(values.floor ? values.floor : "5");
+    }
+  }, [values.floor]);
   React.useEffect(() => {
     if (
       (allocatedSeatsByGlobal && allocatedSeatsByGlobal.length > 0) ||
@@ -172,7 +177,7 @@ const SeatAllocationAdmin = () => {
       .get(`${baseurl}/getAllocatedSetsAdmin`)
       .then((res) => {
         if (res.data && res.data.length > 0) {
-          setallocatedSeatsByGlobal(res.data); 
+          setallocatedSeatsByGlobal(res.data);
         }
       })
       .catch((err) => {
@@ -320,7 +325,7 @@ const SeatAllocationAdmin = () => {
         maxSeats: 0,
       });
     } else if (event.target.name == "bu") {
-      copyValues();
+      // getConfiguredDataByFilter(event.target.value);
       setValues({
         ...values,
         [event.target.name]: event.target.value,
