@@ -307,7 +307,7 @@ const ConfigureSeatAllocation = () => {
                   onClick={handleAllocation}
                   sx={{ textTransform: "capitalize", margin: "6px" }}
                 >
-                  Configure seating capacity
+                  Add new seating capacity
                 </Button>
                 <Button
                   className="primaryBtnColors"

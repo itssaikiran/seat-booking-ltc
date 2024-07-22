@@ -114,7 +114,7 @@ const createAllocatedSetsAdmin=async(body)=>{
   const query = 'INSERT INTO seat_allocation (country,state,city,floor,bu_id,seats,total) VALUES ($1, $2, $3,$4,$5,$6::int[],$7);';
   //  return values
     try {
-      const { rows } = await db.query(query, values);
+      const { rows } = await pool.query(query, values);
       return rows;
     } catch (err) {
       console.error('Error executing query', err);
@@ -126,7 +126,7 @@ const getSeatingCapacityAdminByFilter=async(values)=>{
   console.log(values,"5555")
   const query = `SELECT SUM(capacity) FROM seating_capacity where country=$1 and state=$2 and city=$3 and floor=$4`;
      try {
-      const { rows } = await db.query(query, values);
+      const { rows } = await pool.query(query, values);
       return rows;
     } catch (err) {
       console.error('Error executing query', err);
