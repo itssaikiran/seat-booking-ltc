@@ -1,6 +1,6 @@
 module.exports = {
   host: "localhost",
-  user: "postgres",
+  user: "root",
   password: "12345678",
   database: "seating-allocation-db",
   port: 5432,
