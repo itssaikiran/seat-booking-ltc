@@ -52,10 +52,15 @@ const SeatAllocationAdmin = () => {
   React.useEffect(() => {
     // getSeatingCapacityAdmin();
     getBu();
-    getCapacityData();
     getAllocationData();
-    getConfiguredDataByFilter(values.floor ? values.floor : "5");
   }, []);
+  React.useEffect(() => {
+    if (values.floor) {
+      getAllocationData();
+      getCapacityData();
+      getConfiguredDataByFilter(values.floor ? values.floor : "5");
+    }
+  }, [values.floor,values.bu]);
   React.useEffect(() => {
     if (
       (allocatedSeatsByGlobal && allocatedSeatsByGlobal.length > 0) ||
@@ -172,7 +177,7 @@ const SeatAllocationAdmin = () => {
       .get(`${baseurl}/getAllocatedSetsAdmin`)
       .then((res) => {
         if (res.data && res.data.length > 0) {
-          setallocatedSeatsByGlobal(res.data); 
+          setallocatedSeatsByGlobal(res.data);
         }
       })
       .catch((err) => {
@@ -320,7 +325,7 @@ const SeatAllocationAdmin = () => {
         maxSeats: 0,
       });
     } else if (event.target.name == "bu") {
-      copyValues();
+      // copyValues()
       setValues({
         ...values,
         [event.target.name]: event.target.value,
@@ -516,7 +521,14 @@ const SeatAllocationAdmin = () => {
   const handleSeatingCapacity = () => {
     navigate("/configureSeatAllocation");
   };
-
+  const getBuCount=(id)=>{
+    if(seats && seats.length>0){
+      let records= seats.filter((seat,i)=>seat.bu==id && seat.selected) 
+      if(records.length>0){
+        return records.length
+      }
+    }   
+  }
   return (
     <div className="seatAllocationContainer">
       <Grid container spacing={2} justifyContent={"center"}>
@@ -716,7 +728,7 @@ const SeatAllocationAdmin = () => {
                     >
                       {" "}
                     </div>
-                    <div>{bu.name} </div>
+                    <div>{bu.name} (<b>{getBuCount(bu.id)}</b>)</div>
                   </div>
                 ))}
             </Box>
