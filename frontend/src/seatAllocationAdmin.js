@@ -521,7 +521,14 @@ const SeatAllocationAdmin = () => {
   const handleSeatingCapacity = () => {
     navigate("/configureSeatAllocation");
   };
-
+  const getBuCount=(id)=>{
+    if(seats && seats.length>0){
+      let records= seats.filter((seat,i)=>seat.bu==id && seat.selected) 
+      if(records.length>0){
+        return records.length
+      }
+    }   
+  }
   return (
     <div className="seatAllocationContainer">
       <Grid container spacing={2} justifyContent={"center"}>
@@ -721,7 +728,7 @@ const SeatAllocationAdmin = () => {
                     >
                       {" "}
                     </div>
-                    <div>{bu.name} </div>
+                    <div>{bu.name} (<b>{getBuCount(bu.id)}</b>)</div>
                   </div>
                 ))}
             </Box>
