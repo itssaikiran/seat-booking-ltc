@@ -22,9 +22,17 @@ const initialBuState = {
   maxSeats: 0,
 };
 
-const colorCodes=['#ae7681','#769184','#3b6970','#768391','#a6bbeb','#b587a9',"#b59c87"]
+const colorCodes = [
+  "#ae7681",
+  "#769184",
+  "#3b6970",
+  "#768391",
+  "#a6bbeb",
+  "#b587a9",
+  "#b59c87",
+];
 const SeatAllocationAdmin = () => {
-  const [seats, setSeats] = useState([]);
+  const [seats, setSeats] = useState();
   const [values, setValues] = React.useState(initialBuState);
   const [allocationData, setData] = React.useState([]);
   const [allocateSeatSecFlag, setAllocateSeatSecFlag] = useState(false);
@@ -38,41 +46,31 @@ const SeatAllocationAdmin = () => {
   const [cities, setCities] = useState([]);
   const [floorList, setFloors] = useState([]);
   const [submitted, setSubmitted] = useState(false);
+  const [capacityData, setCapacityData] = useState([]);
 
   const navigate = useNavigate();
   React.useEffect(() => {
     // getSeatingCapacityAdmin();
     getBu();
+    getCapacityData();
     getAllocationData();
-    getConfiguredDataByFilter(values.floor?values.floor:"5")
+    getConfiguredDataByFilter(values.floor ? values.floor : "5");
   }, []);
-  React.useEffect(() => { 
-    if(allocatedSeatsByGlobal && allocatedSeatsByGlobal.length>0 && maxSeats>0){
-      console.log(allocationData,"allocationData")
-      copyValues(); 
+  React.useEffect(() => {
+    if (
+      (allocatedSeatsByGlobal && allocatedSeatsByGlobal.length > 0) ||
+      maxSeats > 0
+    ) {
+      console.log(allocationData, "allocationData");
+      copyValues();
+    }
+  }, [maxSeats, allocatedSeatsByGlobal]);
 
-    } 
-  }, [maxSeats,allocatedSeatsByGlobal])
-  // const getSeatingCapacityAdmin = async () => {
-  //   await axios
-  //     .get(`${baseurl}/getSeatingCapacityAdmin`)
-  //     .then((res) => {
-  //       if (res.data && res.data.length > 0) {
-  //         setallocatedSeatsByGlobal(res.data);
-  //         handleCountries(res.data);
-  //         handleInitialStates(res.data);
-  //         handleInitialCities(res.data);
-  //         handleInitialFloor(res.data);
-  //       }
-  //     })
-  //     .catch((err) => {
-  //       console.log(err);
-  //     });
-  // };
   const handleCountries = (data) => {
     let countryList = [];
 
     for (let i = 0; i < data.length; i++) {
+      console.log(data[i], "jjjjj");
       let findItem = countryList.findIndex(
         (coun) => data[i].country == coun.name
       );
@@ -88,7 +86,9 @@ const SeatAllocationAdmin = () => {
     let statesList = [];
 
     for (let i = 0; i < data.length; i++) {
-      let findItem = statesList.findIndex((coun) => data[i].state == coun.name);
+      let findItem = statesList.findIndex(
+        (coun) => data[i].state == coun.name && data[i].country == "india"
+      );
 
       if (findItem == -1) {
         statesList.push({ name: data[i].state });
@@ -101,7 +101,9 @@ const SeatAllocationAdmin = () => {
     let cityList = [];
 
     for (let i = 0; i < data.length; i++) {
-      let findItem = cityList.findIndex((coun) => data[i].city == coun.name);
+      let findItem = cityList.findIndex(
+        (coun) => data[i].city == coun.name && data[i].country == "india"
+      );
 
       if (findItem == -1) {
         cityList.push({ name: data[i].city });
@@ -114,13 +116,15 @@ const SeatAllocationAdmin = () => {
     let floorList = [];
 
     for (let i = 0; i < data.length; i++) {
-      let findItem = floorList.findIndex((coun) => data[i].floor == coun.name);
+      let findItem = floorList.findIndex(
+        (coun) => data[i].floor == coun.name && data[i].country == "india"
+      );
 
       if (findItem == -1) {
         floorList.push({ name: data[i].floor });
       }
     }
-     setFloors(floorList);
+    setFloors(floorList);
   };
   const getBu = async () => {
     await axios
@@ -128,7 +132,7 @@ const SeatAllocationAdmin = () => {
       .then((res) => {
         if (res.data && res.data.length > 0) {
           res.data.map((row, i) => {
-            row.colorCode = colorCodes[i]
+            row.colorCode = colorCodes[i];
             //getRandomColor();
           });
           setBus(res.data);
@@ -138,7 +142,7 @@ const SeatAllocationAdmin = () => {
         console.log(err);
       });
   };
-  
+
   const getRandomColor = () => {
     var letters = "0123456789ABCDEF";
     var color = "#";
@@ -147,14 +151,12 @@ const SeatAllocationAdmin = () => {
     }
     return color;
   };
-  
-  const getAllocationData = async () => {
+  const getCapacityData = async () => {
     await axios
-      .get(`${baseurl}/getAllocatedSetsAdmin`)
+      .get(`${baseurl}/getSeatingCapacityAdmin`)
       .then((res) => {
         if (res.data && res.data.length > 0) {
-          setallocatedSeatsByGlobal(res.data);
-          // handleCountries(res.data);
+          setCapacityData(res.data);
           handleCountries(res.data);
           handleInitialStates(res.data);
           handleInitialCities(res.data);
@@ -165,35 +167,41 @@ const SeatAllocationAdmin = () => {
         console.log(err);
       });
   };
-  
+  const getAllocationData = async () => {
+    await axios
+      .get(`${baseurl}/getAllocatedSetsAdmin`)
+      .then((res) => {
+        if (res.data && res.data.length > 0) {
+          setallocatedSeatsByGlobal(res.data); 
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
   const handleStates = (data, country) => {
     let stateList = [];
-
     for (let i = 0; i < data.length; i++) {
-      let findItem = stateList.findIndex(
-        (coun) => data[i].state == coun.name && data[i].country == country
-      );
- 
-      if (findItem == -1) {
-         stateList.push({ name: data[i].state });
+      let findItem = stateList.findIndex((coun) => data[i].state == coun.name);
+      if (findItem == -1 && data[i].country == country) {
+        stateList.push({ name: data[i].state });
       }
     }
- 
+
     setStates(stateList);
   };
   const handleCities = (data, state) => {
     let cityList = [];
 
     for (let i = 0; i < data.length; i++) {
-      let findItem = cityList.findIndex(
-        (coun) =>
-          data[i].city == coun.name &&
-          data[i].country == values.country &&
-          data[i].state == state
-      );
-      
+      let findItem = cityList.findIndex((coun) => data[i].city == coun.name);
 
-      if (findItem == -1) {
+      if (
+        findItem == -1 &&
+        data[i].country == values.country &&
+        data[i].state == state
+      ) {
         cityList.push({ name: data[i].city });
       }
     }
@@ -204,20 +212,18 @@ const SeatAllocationAdmin = () => {
     let floorList = [];
 
     for (let i = 0; i < data.length; i++) {
-      let findItem = floorList.findIndex(
-        (coun) =>
-          data[i].floor == coun.name &&
-          data[i].country == values.country &&
-          data[i].state == values.state &&
-          data[i].city == city
-      );
-       
+      let findItem = floorList.findIndex((coun) => data[i].floor == coun.name);
 
-      if (findItem == -1) {
-         floorList.push({ name: data[i].floor });
+      if (
+        findItem == -1 &&
+        data[i].country == values.country &&
+        data[i].state == values.state &&
+        data[i].city == city
+      ) {
+        floorList.push({ name: data[i].floor });
       }
     }
- 
+
     setFloors(floorList);
   };
   const copyValues = () => {
@@ -233,12 +239,15 @@ const SeatAllocationAdmin = () => {
         selected: 0,
         status: 0,
       };
-      console.log(allocatedSeatsByGlobal,"allocatedSeatsByGlobal")
+      console.log(allocatedSeatsByGlobal, "allocatedSeatsByGlobal");
       if (allocatedSeatsByGlobal.length > 0) {
         allocatedSeatsByGlobal.map((obj, j) => {
-           if (obj.seats && obj.seats.includes(i + 1)) {
+          if (obj.seats && obj.seats.includes(i + 1)) {
             sobj = {
-              selected: !obj.selected &&parseInt(obj.floor) == parseInt(values.floor) ? 1 : 0,
+              selected:
+                !obj.selected && parseInt(obj.floor) == parseInt(values.floor)
+                  ? 1
+                  : 0,
               bu: obj.bu_id,
               floor: obj.floor,
               city: obj.city,
@@ -254,14 +263,14 @@ const SeatAllocationAdmin = () => {
   };
   const getConfiguredDataByFilter = async (floor) => {
     let queryParams = { ...values, floor };
-     await axios
+    await axios
       .get(`${baseurl}/getSeatingCapacityAdminByFilter`, {
         params: queryParams,
       })
       .then((res) => {
         if (res.data && res.data.length > 0 && res.data[0].sum) {
           setMaxSeats(res.data[0].sum);
-         } else {
+        } else {
           setMaxSeats(100);
         }
       })
@@ -271,7 +280,7 @@ const SeatAllocationAdmin = () => {
   };
   const handleChange = (event) => {
     if (event.target.name == "country") {
-      handleStates(allocationData, event.target.value);
+      handleStates(capacityData, event.target.value);
       setValues({
         ...values,
         [event.target.name]: event.target.value,
@@ -282,7 +291,7 @@ const SeatAllocationAdmin = () => {
         maxSeats: 0,
       });
     } else if (event.target.name == "state") {
-       handleCities(allocationData, event.target.value);
+      handleCities(capacityData, event.target.value);
       setValues({
         ...values,
         [event.target.name]: event.target.value,
@@ -292,7 +301,7 @@ const SeatAllocationAdmin = () => {
         maxSeats: 0,
       });
     } else if (event.target.name == "city") {
-      handleFloor(allocationData, event.target.value);
+      handleFloor(capacityData, event.target.value);
       setValues({
         ...values,
         [event.target.name]: event.target.value,
@@ -321,19 +330,19 @@ const SeatAllocationAdmin = () => {
       setValues({ ...values, [event.target.name]: event.target.value });
     }
   };
-  const colorCodeF = (bu, selected) => { 
-    let buData = bus.find((buDta) => buDta.id == bu); 
+  const colorCodeF = (bu, selected) => {
+    let buData = bus.find((buDta) => buDta.id == bu);
     let colorCode = "";
     if (buData) {
       colorCode = buData.colorCode;
     }
     colorCode = selected && colorCode ? colorCode : "#d1cdcd";
-     return colorCode;
+    return colorCode;
   };
   const handleSelectSeats = () => {
     setSeatsEnable(true);
     setAllocateSeatSecFlag(false);
-   };
+  };
   const handleAllocateSets = (copySeats, getUnallocated) => {
     copySeats.map((copyseat, j) => {
       getUnallocated.map((getUnallocat, i) => {
@@ -366,7 +375,7 @@ const SeatAllocationAdmin = () => {
       getBackUnallocated.length == values.maxSeats
     ) {
       getUnallocated = getBackUnallocated;
-    } 
+    }
     return getUnallocated;
   };
   const getDataFromIndexToBack = (copySeats, index, maxSeats) => {
@@ -393,7 +402,7 @@ const SeatAllocationAdmin = () => {
           findSelectedIndex
         );
       }
-    } 
+    }
     return getUnallocatedLessSeats;
   };
   const handleSeatAllocation = (e, index) => {
@@ -402,7 +411,7 @@ const SeatAllocationAdmin = () => {
 
     let selectedSeats = copySeats.filter(
       (seat) => seat.status == 1 && seat.selected == 1
-    ); 
+    );
     if (selectedSeats.length == 0) {
       let getUnallocated = getDataFromIndex(copySeats, index, maxSeats);
       if (getUnallocated.length == parseInt(values.maxSeats)) {
@@ -484,9 +493,9 @@ const SeatAllocationAdmin = () => {
           };
         }
       }
-    }); 
+    });
     let mergedArray = Object.values(result);
- 
+
     if (mergedArray.length > 0) {
       handleAllocationToHOE(mergedArray[0]);
     }
@@ -496,8 +505,8 @@ const SeatAllocationAdmin = () => {
       .post(`${baseurl}/createAllocatedSetsAdmin`, obj)
       .then((res) => {
         console.log(res.data, "hhhhhhhhh");
-        if (res.data) { 
-          setAllocateSeatSecFlag(false)
+        if (res.data) {
+          setAllocateSeatSecFlag(false);
         }
       })
       .catch((err) => {
@@ -507,7 +516,7 @@ const SeatAllocationAdmin = () => {
   const handleSeatingCapacity = () => {
     navigate("/configureSeatAllocation");
   };
- 
+
   return (
     <div className="seatAllocationContainer">
       <Grid container spacing={2} justifyContent={"center"}>
@@ -560,7 +569,7 @@ const SeatAllocationAdmin = () => {
                       onChange={handleChange}
                     >
                       {countries.map((country, i) => (
-                        <MenuItem value={country.name} >{country.name}</MenuItem>
+                        <MenuItem value={country.name}>{country.name}</MenuItem>
                       ))}
                     </Select>
                   </FormControl>
@@ -691,21 +700,25 @@ const SeatAllocationAdmin = () => {
                     </>
                   ))
                 : "Please select the filters then you can able to select the srats "}
-              {bus && bus.length>0 && bus.map((bu,i)=>(
-                <div className="legendsSeating fontFamily">
-                  <div
-                    className="seat"
-                    style={{
-                      background: bu.colorCode,
-                      height: "15px",
-                      width: "15px",
-                    }}
-                  >
-                    {" "}
+              {allocatedSeatsByGlobal &&
+                allocatedSeatsByGlobal.length > 0 &&
+                bus &&
+                bus.length > 0 &&
+                bus.map((bu, i) => (
+                  <div className="legendsSeating fontFamily">
+                    <div
+                      className="seat"
+                      style={{
+                        background: bu.colorCode,
+                        height: "15px",
+                        width: "15px",
+                      }}
+                    >
+                      {" "}
+                    </div>
+                    <div>{bu.name} </div>
                   </div>
-                  <div>{bu.name} </div>
-                </div>
-              ))} 
+                ))}
             </Box>
           </Grid>
           {/* )} */}
