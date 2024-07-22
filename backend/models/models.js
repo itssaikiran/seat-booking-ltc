@@ -135,7 +135,7 @@ const getSeatingCapacityAdminByFilter=async(values)=>{
 }
 
 const getHOEFromTable = async (id) => {
-  const sql = `SELECT t1.id, t1.name, t1.manager, t1.role, t2.country, t2.state, t2.city, t2.floor, t2.total, t2.seats
+  const sql = `SELECT t1.id, t1.name, t1.manager, t1.role, t2.country, t2.state, t2.city, t2.campus, t2.floor, t2.total, t2.seats
             FROM business_unit AS t1
             INNER JOIN seat_allocation AS t2
             ON t1.id = t2.bu_id
@@ -152,9 +152,9 @@ const getHOEFromTable = async (id) => {
   }
 };
 
-const getManagersByHOEIdFromTable = async (id) => {
-  const sql = 'SELECT * FROM manager_allocation WHERE hoe_id = $1 ORDER BY seats_array[1]';
-  const values = [id];
+const getManagersByHOEIdFromTable = async (id, campus, floor) => {
+  const sql = 'SELECT * FROM manager_allocation WHERE hoe_id = $1 AND campus = $2 AND floor = $3 ORDER BY seats_array[1]';
+  const values = [id, campus, floor];
 
   try {
     const { rows } = await pool.query(sql, values);

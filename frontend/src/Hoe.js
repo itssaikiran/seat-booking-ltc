@@ -1,6 +1,6 @@
 //changed ranges in giving renderSeats function
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import {
   Button, Grid, Typography, Select, MenuItem, InputLabel, FormControl, Paper, TextField, Box, Snackbar, Alert,
@@ -9,14 +9,29 @@ import {
 import Seat from './Seat';
 
 const Hoe = () => {
-
+  const [HoeList, setHoeList] = useState([]);
   const [HOE, setHoe] = useState({});  //to store and update HOE
+  const [locations, setLocations] = useState([]);
+
   const [managers, setManagers] = useState([]); //to store and update all managers under HOE
   const [selectedManager, setSelectedManager] = useState('');  //to store and update selected manager in drop-down
   const [selectedSeats, setSelectedSeats] = useState([]);   //to store seats while selecting
   const [isSeatsChanging, setIsSeatsChanging] = useState(false); //we cannot select seats when isSeatsChanging is false
 
   const [openSnackbar, setOpenSnackbar] = useState(false); // to show a small popup when we update table in database with content "Data Updated Successfully"
+
+  const [selectedCountry, setSelectedCountry] = useState('');
+  const [selectedState, setSelectedState] = useState('');
+  const [selectedCity, setSelectedCity] = useState('');
+  const [selectedCampus, setSelectedCampus] = useState('');
+  const [selectedFloor, setSelectedFloor] = useState('');
+
+  /*-------- these constants are used to show respected values in the dropdowns --------*/
+  const countries = [...new Set(locations.map(location => location.country))];
+  const states = [...new Set(locations.filter(location => location.country === selectedCountry).map(location => location.state))];
+  const cities = [...new Set(locations.filter(location => location.state === selectedState).map(location => location.city))];
+  const campuses = [...new Set(locations.filter(location => location.city === selectedCity).map(location => location.campus))];
+  const floors = [...new Set(locations.filter(location => location.campus === selectedCampus).map(location => location.floor))];
 
   /*-------- handleSnackbarClose function is to show & close popup after updating table --------*/
   const handleSnackbarClose = () => {
@@ -25,28 +40,67 @@ const Hoe = () => {
 
 
   useEffect(() => {
-    getHOEDetails(2);  // Aslo change id in line 82
+    getHOEDetails(1);  // Aslo change id in line 73 && 137
   }, []);
 
   /*-------- getHOEDetails function get HOE and Managers details from database --------*/
   const getHOEDetails = async (id) => {
     try {
       const response1 = await axios.get(`http://localhost:8080/getHOEFromTable/${id}`);
-      const response2 = await axios.get(`http://localhost:8080/getManagersByHOEIdFromTable/${id}`);
 
-      // console.log('HOE data:', response1.data);
-      // console.log("response 2", response2.data);
-      // console.log('Managers data:', response2.data);
-      // console.log("Selected Manager:", response2.data[0]);
+      await Promise.all([
+        setHoeList(response1.data),
+        setHoe(response1.data[0]),
+        setLocations(response1.data),
+        setSelectedCountry(response1.data[0].country),
+        setSelectedState(response1.data[0].state),
+        setSelectedCity(response1.data[0].city),
+        setSelectedCampus(response1.data[0].campus),
+        setSelectedFloor(response1.data[0].floor),
+      ]);
 
-      setHoe(response1.data[0]);
-      setManagers(response2.data.map(item => ({ ...item, name: item.first_name + " " + item.last_name })));
-      setSelectedManager({ ...response2.data[0], name: response2.data[0].first_name + " " + response2.data[0].last_name });
+      // console.log(selectedCampus);
+      // console.log(selectedFloor);
+      // console.log(response1.data);
 
     } catch (err) {
       console.error('Error fetching data:', err);
     }
   };
+
+  const getManagerDetails = useCallback(async (id) => {
+    // console.log("campus", selectedCampus);
+    // console.log("floor", selectedFloor);
+    try {
+      const response2 = await axios.get(`http://localhost:8080/getManagersByHOEIdFromTable/${id}`, {
+        params: {
+          campus: selectedCampus,
+          floor: selectedFloor
+        }
+      });
+
+      //console.log("response 2", response2.data);
+      // console.log('Managers data:', response2.data);
+      // console.log("Selected Manager:", response2.data[0]);
+
+      setManagers(response2.data.map(item => ({ ...item, name: item.first_name + " " + item.last_name })));
+      if (selectedManager === '') setSelectedManager({ ...response2.data[0], name: response2.data[0].first_name + " " + response2.data[0].last_name });
+      else {
+        const managerDetails = response2.data.filter(item => item.id === selectedManager.id);
+        if (managerDetails.length === 0) setSelectedManager({ ...response2.data[0], name: response2.data[0].first_name + " " + response2.data[0].last_name });
+        else setSelectedManager({ ...managerDetails[0], name: managerDetails[0].first_name + " " + managerDetails[0].last_name });
+      }
+
+    } catch (err) {
+      console.error('Error fetching data:', err);
+    }
+  }, [selectedFloor, selectedCampus, selectedManager]);
+
+  useEffect(() => {
+    if (selectedFloor !== "") {
+      getManagerDetails(1);  // Aslo change id in line 43 && 137
+    }
+  }, [selectedFloor, getManagerDetails]);
 
   /*-------- handleManagerChange function is to change selectedManager --------*/
   const handleManagerChange = (event) => {
@@ -72,6 +126,7 @@ const Hoe = () => {
     selectedSeats.sort((a, b) => a - b);
     //console.log(selectedSeats);
     //console.log(typeof (selectedSeats));
+    //console.log(selectedManager.id);
     if (selectedManager && selectedSeats.length > 0) {
       try {
         await axios.put(`http://localhost:8080/updateManagerData/${selectedManager.id}`, {
@@ -79,7 +134,7 @@ const Hoe = () => {
         });
         setSelectedSeats([]);
         setIsSeatsChanging(false);
-        getHOEDetails(2); // Refresh data
+        getManagerDetails(1); // Refresh data  // Aslo change id in line 43 && 73
         setOpenSnackbar(true); // Show Snackbar
       } catch (err) {
         console.error(err);
@@ -100,7 +155,6 @@ const Hoe = () => {
           managerDetails={selectedManager}
           managersList={managers}
           isSeatsChanging={isSeatsChanging}
-          updatableSeats={selectedSeats}
           key={i}
           number={i}
           isSelected={selectedSeats.includes(i)}
@@ -126,7 +180,115 @@ const Hoe = () => {
   }
 
   return (
-    <div style={{ marginTop: 110, marginBottom: 110, display: "flex", flexDirection: "column", alignItems: "center" }}>
+    <div style={{ marginTop: 50, marginBottom: 50, display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <Box>
+        <Box display="flex" flexDirection="row" justifyContent="center" flexWrap="wrap" gap={2} mb={2}>
+          <FormControl sx={{ minWidth: 200 }}>
+            <InputLabel id="country-select-label">Country</InputLabel>
+            <Select
+              labelId="country-select-label"
+              id="country-select"
+              value={selectedCountry}
+              label="Country"
+              onChange={(e) => {
+                setSelectedCountry(e.target.value);
+                setSelectedState('');
+                setSelectedCity('');
+                setSelectedCampus('');
+                setSelectedFloor('');
+              }}
+            >
+              {countries.map((country, index) => (
+                <MenuItem key={index} value={country}>
+                  {country}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl sx={{ minWidth: 200 }} disabled={!selectedCountry}>
+            <InputLabel id="state-select-label">State</InputLabel>
+            <Select
+              labelId="state-select-label"
+              id="state-select"
+              value={selectedState}
+              label="State"
+              onChange={(e) => {
+                setSelectedState(e.target.value);
+                setSelectedCity('');
+                setSelectedCampus('');
+                setSelectedFloor('');
+              }}
+            >
+              {states.map((state, index) => (
+                <MenuItem key={index} value={state}>
+                  {state}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl sx={{ minWidth: 200 }} disabled={!selectedState}>
+            <InputLabel id="city-select-label">City</InputLabel>
+            <Select
+              labelId="city-select-label"
+              id="city-select"
+              value={selectedCity}
+              label="City"
+              onChange={(e) => {
+                setSelectedCity(e.target.value);
+                setSelectedCampus('');
+                setSelectedFloor('');
+              }}
+            >
+              {cities.map((city, index) => (
+                <MenuItem key={index} value={city}>
+                  {city}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl sx={{ minWidth: 200 }} disabled={!selectedCity}>
+            <InputLabel id="campus-select-label">Campus</InputLabel>
+            <Select
+              labelId="campus-select-label"
+              id="campus-select"
+              value={selectedCampus}
+              label="Campus"
+              onChange={(e) => {
+                setSelectedCampus(e.target.value);
+                setSelectedFloor('');
+                setIsSeatsChanging(false);
+              }}
+            >
+              {campuses.map((campus, index) => (
+                <MenuItem key={index} value={campus}>
+                  {campus}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl sx={{ minWidth: 200 }} disabled={!selectedCampus}>
+            <InputLabel id="floor-select-label">Floor</InputLabel>
+            <Select
+              labelId="floor-select-label"
+              id="floor-select"
+              value={selectedFloor}
+              label="Floor"
+              onChange={(e) => {
+                setSelectedFloor(e.target.value);
+                setHoe(HoeList.filter(item => item.campus === selectedCampus && item.floor === e.target.value)[0]);
+                setIsSeatsChanging(false);
+                setSelectedSeats([]);
+              }}
+            >
+              {floors.map((floor, index) => (
+                <MenuItem key={index} value={floor}>
+                  {floor}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+      </Box>
       {managers.length > 0 && <TableContainer component={Paper} sx={{ marginTop: '20px', marginBottom: '40px', width: "80%" }}>
         <Table>
           <TableHead>
@@ -178,6 +340,9 @@ const Hoe = () => {
           <Typography variant="body2">City: {HOE.city}</Typography>
         </Box>
         <Box p={1} border={1} borderRadius={4}>
+          <Typography variant="body2">Campus: {HOE.campus}</Typography>
+        </Box>
+        <Box p={1} border={1} borderRadius={4}>
           <Typography variant="body2">Floor: {HOE.floor}</Typography>
         </Box>
       </Box>
@@ -189,7 +354,7 @@ const Hoe = () => {
       <Grid container spacing={5} justifyContent="center" marginBottom={5}>
         <Grid item>
           <Box sx={{ width: 20, height: 20, backgroundColor: '#28a745', display: 'inline-block', marginRight: '5px' }} />
-          <Typography variant="body2" display="inline">Seats Available</Typography>
+          <Typography variant="body2" display="inline">Available Seats</Typography>
         </Grid>
         <Grid item>
           <Box sx={{ width: 20, height: 20, backgroundColor: '#ffc107', display: 'inline-block', marginRight: '5px' }} />

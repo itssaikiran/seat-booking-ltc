@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@mui/material';
 
-const Seat = ({ number, isSelected, onClick, managerDetails, managersList, updatableSeats, isSeatsChanging, totalHoeSeats }) => {
+const Seat = ({ number, isSelected, onClick, managerDetails, managersList, isSeatsChanging, totalHoeSeats }) => {
 
     const dummy = managersList.flatMap(manager => manager.seats_array); // to get all allocated seats 
     const allocatedSeats = isSeatsChanging ? dummy.filter(item => !managerDetails.seats_array.includes(item)) : dummy;
