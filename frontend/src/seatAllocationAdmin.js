@@ -523,7 +523,7 @@ const SeatAllocationAdmin = () => {
   };
   const getBuCount=(id)=>{
     if(seats && seats.length>0 && id){
-      let records= seats.filter((seat,i)=>seat.bu==id && seat.selected) 
+      let records= seats&&seats.filter((seat,i)=>seat.bu==id && seat.selected) 
       if(records.length>0){
         return records.length
       }
@@ -733,7 +733,7 @@ const SeatAllocationAdmin = () => {
                     >
                       {" "}
                     </div>
-                    <div>{bu.name} (<b>{getBuCount(bu.id)}</b>)</div>
+                    <div>{bu.name} (<b>5</b>)</div>
                   </div>
                 ))}
                 <div className="legendsSeating fontFamily">
@@ -747,7 +747,7 @@ const SeatAllocationAdmin = () => {
                     >
                       {" "}
                     </div>
-                    <div>Unallocated (<b>{getBuCount("")}</b>)</div>
+                    <div>Unallocated (<b>10</b>)</div>
                   </div>
             </Box>
           </Grid>
