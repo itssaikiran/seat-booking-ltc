@@ -94,25 +94,27 @@ const ConfigureSeatAllocation = () => {
   };
 
   const handleAllocation = () => {
+    setConfigFlag("Add")
     setAllocateSeatSecFlag(true);
+    clearAllocation();
   };
   const validate = () => {
     const newErrors = {};
     
     if(!values.country){
-      newErrors.country="country required"
+      newErrors.country="required"
     }
     if(!values.state){
-      newErrors.state="country required"
+      newErrors.state="required"
      }
     if(!values.city){
-      newErrors.city="country required"
+      newErrors.city="required"
      }
     if(!values.floor){
-      newErrors.floor="country required"
+      newErrors.floor="required"
      }
     if(!values.capacity){
-      newErrors.capacity="country required"
+      newErrors.capacity="required"
      }
     return newErrors;
   };
@@ -126,14 +128,11 @@ const ConfigureSeatAllocation = () => {
       setErrors({});
       // Reset form or redirect user after successful submission
     }
-    if(!values.country || !values.state || !values.city || !values.floor){ 
+    if(!values.country || !values.state || !values.city || !values.floor || !values.capacity){ 
      
       return;
 
     }
-    
-    
-    console.log(values, "55");
     if (configFlag == "Edit") {
       editCapacity();
     } else {
@@ -181,6 +180,7 @@ const ConfigureSeatAllocation = () => {
   };
   const handleBack = () => {
     setAllocateSeatSecFlag(false);
+    clearAllocation();
   };
   const handleSeatAllocation = () => {
     navigate("/seatAllocationAdmin");
@@ -190,6 +190,8 @@ const ConfigureSeatAllocation = () => {
     setValues(row);
     setConfigFlag("Edit");
     setAllocateSeatSecFlag(true);
+    setErrors({});
+
   };
   const handleDelete = async (row, id) => {
     await axios
@@ -328,7 +330,7 @@ const ConfigureSeatAllocation = () => {
                   value={values.capacity}
                   onChange={handleChange}
                 />
-                                {errors.capacity?<div className="fontFamily" style={{color:"red",paddingTop:"5px", fontSize:"12px"}}>Add capacity</div>:""}
+                {errors.capacity?<div className="fontFamily" style={{color:"red",paddingTop:"5px", fontSize:"12px"}}>Add capacity</div>:""}
 
                 {/* <Input id="outlined-basic" variant="outlined"   name='maxSeats' value={values.maxSeats} onChange={handleChange} type="number"/> */}
               </FormControl>
