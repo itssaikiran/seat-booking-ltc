@@ -36,7 +36,7 @@ const SeatAllocationAdmin = () => {
   const [values, setValues] = React.useState(initialBuState);
   const [allocationData, setData] = React.useState([]);
   const [allocateSeatSecFlag, setAllocateSeatSecFlag] = useState(false);
-  const [capacity, setCapacity] = useState(0);
+  const [errors, setErrors] = useState({});
   const [seatEnable, setSeatsEnable] = useState(false);
   const [allocatedSeatsByGlobal, setallocatedSeatsByGlobal] = useState([]);
   const [maxSeats, setMaxSeats] = useState(0);
@@ -45,19 +45,19 @@ const SeatAllocationAdmin = () => {
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
   const [floorList, setFloors] = useState([]);
-  const [submitted, setSubmitted] = useState(false);
+  const [layoutView, setLayoutView] = useState(initialBuState);
   const [capacityData, setCapacityData] = useState([]);
 
   const navigate = useNavigate();
   React.useEffect(() => {
-    // getSeatingCapacityAdmin();
     getBu();
     getAllocationData();
+    getCapacityData();
+
   }, []);
   React.useEffect(() => {
     if (values.floor) {
       getAllocationData();
-      getCapacityData();
       getConfiguredDataByFilter(values.floor ? values.floor : "5");
     }
   }, [values.floor,values.bu]);
@@ -86,51 +86,7 @@ const SeatAllocationAdmin = () => {
     }
     console.log(countryList, "countryList");
     setCountries(countryList);
-  };
-  const handleInitialStates = (data) => {
-    let statesList = [];
-
-    for (let i = 0; i < data.length; i++) {
-      let findItem = statesList.findIndex(
-        (coun) => data[i].state == coun.name && data[i].country == "india"
-      );
-
-      if (findItem == -1) {
-        statesList.push({ name: data[i].state });
-      }
-    }
-    console.log(statesList, "countryList");
-    setStates(statesList);
-  };
-  const handleInitialCities = (data) => {
-    let cityList = [];
-
-    for (let i = 0; i < data.length; i++) {
-      let findItem = cityList.findIndex(
-        (coun) => data[i].city == coun.name && data[i].country == "india"
-      );
-
-      if (findItem == -1) {
-        cityList.push({ name: data[i].city });
-      }
-    }
-    console.log(cityList, "countryList");
-    setCities(cityList);
-  };
-  const handleInitialFloor = (data) => {
-    let floorList = [];
-
-    for (let i = 0; i < data.length; i++) {
-      let findItem = floorList.findIndex(
-        (coun) => data[i].floor == coun.name && data[i].country == "india"
-      );
-
-      if (findItem == -1) {
-        floorList.push({ name: data[i].floor });
-      }
-    }
-    setFloors(floorList);
-  };
+  }; 
   const getBu = async () => {
     await axios
       .get(`${baseurl}/getBu`)
@@ -163,9 +119,9 @@ const SeatAllocationAdmin = () => {
         if (res.data && res.data.length > 0) {
           setCapacityData(res.data);
           handleCountries(res.data);
-          handleInitialStates(res.data);
-          handleInitialCities(res.data);
-          handleInitialFloor(res.data);
+          handleStates(res.data,values.country);
+          handleCities(res.data,values.state);
+          handleFloor(res.data,values.city);
         }
       })
       .catch((err) => {
@@ -317,7 +273,9 @@ const SeatAllocationAdmin = () => {
     } else if (event.target.name == "floor") {
       // setMaxSeats(0);
       getConfiguredDataByFilter(event.target.value);
-
+      setLayoutView({...values,floor
+        :event.target.value
+      })
       setValues({
         ...values,
         [event.target.name]: event.target.value,
@@ -333,6 +291,7 @@ const SeatAllocationAdmin = () => {
       });
     } else {
       setValues({ ...values, [event.target.name]: event.target.value });
+      setErrors({...errors,maxSeats:""})
     }
   };
   const colorCodeF = (bu, selected) => {
@@ -341,12 +300,30 @@ const SeatAllocationAdmin = () => {
     if (buData) {
       colorCode = buData.colorCode;
     }
-    colorCode = selected && colorCode ? colorCode : "#d1cdcd";
+    colorCode = selected && colorCode ? colorCode : "#fff";
     return colorCode;
   };
+  const validate = () => {
+    const newErrors = {};
+    if(!values.maxSeats || values.maxSeats>getBuCount("")){
+      if(values.maxSeats>getBuCount("")){
+          newErrors.maxSeats="You have the capacity of "+getBuCount("")
+      }else{
+        newErrors.maxSeats="required"
+      }
+     }
+    return newErrors;
+  };
   const handleSelectSeats = () => {
-    setSeatsEnable(true);
-    setAllocateSeatSecFlag(false);
+    const validationErrors = validate();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      setSeatsEnable(false);
+    } else {
+      setErrors({});
+      setSeatsEnable(true);
+      setAllocateSeatSecFlag(false);
+    } 
   };
   const handleAllocateSets = (copySeats, getUnallocated) => {
     copySeats.map((copyseat, j) => {
@@ -523,14 +500,18 @@ const SeatAllocationAdmin = () => {
   };
   const getBuCount=(id)=>{
     if(seats && seats.length>0 && id){
-      let records= seats.filter((seat,i)=>seat.bu==id && seat.selected) 
+      let records= seats&&seats.filter((seat,i)=>seat.bu==id && seat.selected)
       if(records.length>0){
         return records.length
+      }else{
+        return 0
       }
     }else{
-      let records= seats.filter((seat,i)=>seat.bu=="") 
-      if(records.length>0){
+      let records= seats&&seats.filter((seat,i)=>!seat.selected)
+      if(records && records.length>0){
         return records.length
+      }else{
+        return 0
       }
     }   
   }
@@ -674,6 +655,7 @@ const SeatAllocationAdmin = () => {
                     onChange={handleChange}
                   />
                   {/* <Input id="outlined-basic" variant="outlined"   name='maxSeats' value={values.maxSeats} onChange={handleChange} type="number"/> */}
+                  {errors.maxSeats?<div className="fontFamily" style={{color:"red",paddingTop:"5px", fontSize:"12px"}}>{errors.maxSeats}</div>:""}
                 </FormControl>
               </Box>
               <Box sx={{ marginTop: "10px" }}>
@@ -700,7 +682,7 @@ const SeatAllocationAdmin = () => {
           {/* ) : ( */}
           <Grid item md={9}>
             <Box className="seatAllocationClass">
-              <h2 className="fontFamily">Seat Allocation</h2>
+              <h2 className="fontFamily" style={{textTransform:"capitalize"}}>Layout view ( {layoutView.country} &gt; {layoutView.state} &gt; {layoutView.city} &gt; {layoutView.floor} )</h2>
               {seats && seats.length > 0
                 ? seats.map((row, rowIndex) => (
                     <>
@@ -740,14 +722,14 @@ const SeatAllocationAdmin = () => {
                     <div
                       className="seat"
                       style={{
-                        background: "#d1cdcd",
+                        background: "#fff",
                         height: "15px",
                         width: "15px",
                       }}
                     >
                       {" "}
                     </div>
-                    <div>Unallocated (<b>{getBuCount("")}</b>)</div>
+                    <div>Available (<b>{getBuCount("")}</b>)</div>
                   </div>
             </Box>
           </Grid>
